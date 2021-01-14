@@ -1,5 +1,6 @@
-node_modules
-build
-npm-debug.log
+/node_modules
+.DS_S*
+/**/.DS_S*
+/build
 .env
-.DS_Store
+/.vscode
