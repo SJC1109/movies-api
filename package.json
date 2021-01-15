@@ -10,10 +10,11 @@
     "compile:usermodels": "babel ./api/users --out-dir build/api/users",
     "compile:models": "npm-run-all compile:moviemodels compile:usermodels",
     "compile:seed": "babel ./seedData --out-dir build/seedData",
+    "compile:authenticate": "babel ./authenticate --out-dir build/authenticate",
     "compile:routes": "babel ./routes --out-dir build/routes ",
     "compile:app": "babel index.js --out-dir build/",
     "compile:db": "babel db.js --out-dir build/",
-    "compile:all": "npm-run-all compile:models compile:seed compile:app compile:db ",
+    "compile:all": "npm-run-all compile:models compile:seed compile:authenticate compile:app compile:db ",
     "postinstall": "rimraf ./build && npm run compile:all",
     "start": "nodemon --exec babel-node index.js",
     "test": "cross-env NODE_ENV=test mocha --timeout 10000"

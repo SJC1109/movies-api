@@ -2,11 +2,15 @@ import chai from "chai";
 import request from "supertest";
 const mongoose = require("mongoose");
 import User from "../../../../api/users/userModel";
+import api from "../../../../index";
 
 const expect = chai.expect;
 
 let db;
-let api;
+//let api;
+let token;
+let specfiedUser;
+let movieId = 590706
 
 const users = [
   {
@@ -20,12 +24,23 @@ const users = [
 ];
 
 describe("Users endpoint", () => {
-  before(() => {
+  before((done) => {
     mongoose.connect(process.env.mongoDB, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
     db = mongoose.connection;
+    request(api)
+      .post("/api/users")
+      .send({
+        "username": "user1",
+        "password": "test1"
+      })
+      .end((err, res) => {
+        token = res.body.token;
+        console.log(token)
+        done();
+      });
   });
 
   after(async () => {
@@ -37,7 +52,7 @@ describe("Users endpoint", () => {
   });
   beforeEach(async () => {
     try {
-      api = require("../../../../index");
+      //api = require("../../../../index");
       await User.deleteMany({});
       await User.collection.insertMany(users);
     } catch (err) {
@@ -66,15 +81,16 @@ describe("Users endpoint", () => {
   });
 
   describe("POST / ", () => {
+
     it("should return a 200 status and the confirmation message", () => {
       return request(api)
-        .post("/api/users")
+        .post("/api/users?action=register")
         .send({
           username: "user3",
           password: "test3",
         })
-        .expect(200)
-        .expect({ success: true, token: "FakeTokenForNow" });
+        .expect(201)
+        .expect({ code: 201, msg: 'Successful created new user.' });
     });
     after(() => {
       return request(api)
@@ -87,7 +103,50 @@ describe("Users endpoint", () => {
           expect(res.body.length).to.equal(3);
           let result = res.body.map((user) => user.username);
           expect(result).to.have.members(["user1", "user2", "user3"]);
+          specfiedUser = res.body[0]
         });
     });
+    
   });
+
+  describe("PUT / ", () => {
+    it("should return a 200 status and the updated user", () => {
+      let username = "newName"
+      return request(api)
+        .put(`/api/users/${specfiedUser._id}`)
+        .send({
+          username
+        })
+        .expect(200)
+        .then((res) => {
+          request(api)
+          .get("/api/users")
+          .then((res) => {
+            expect(res).to.have.members(["user1", "user2", username]);
+          })
+        })
+    });
+  })
+
+  describe("Favourites / ", () => {
+    it("should return a 201 status and message", () => {
+      return request(api)
+        .post(`/api/users/user1/favourites`)
+        .send({
+          id: movieId
+        })
+        .expect(201)
+        .then((res) => {
+          expect(res.body.favourites.length).to.be.above(0)
+        })
+    });
+    it("should return a 200 status and favourites list", () => {
+      return request(api)
+        .get(`/api/users/user1/favourites`)
+        .expect(200)
+        .then((res) => {  
+          expect(res.body.length).to.equal(0);
+        })
+    });
+  })
 });

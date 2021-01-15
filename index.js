@@ -1,23 +1,15 @@
-import dotenv from 'dotenv';
+import dotenv, { load } from 'dotenv';
 import express from 'express';
 import moviesRouter from './api/movies';
 import bodyParser from 'body-parser';
-import loglevel from 'loglevel';
 import './db';
-import {loadUsers} from './seedData'
+import {loadUsers, loadMovies} from './seedData';
 import usersRouter from './api/users';
+import passport from './authenticate';
+import session from 'express-session';
 
 dotenv.config();
 
-if (process.env.NODE_ENV === 'test') {
-  loglevel.setLevel('warn')
-} else {
-  loglevel.setLevel('info')
-}
-
-if (process.env.SEED_DB === 'true' && process.env.NODE_ENV === 'development') {
-  loadUsers();
-}
 const errHandler = (err, req, res, next) => {
   /* if the error in development then send stack trace to display whole error,
   if it's in production then just send error message  */
@@ -27,26 +19,31 @@ const errHandler = (err, req, res, next) => {
   res.status(500).send(`Hey!! You caught the error 👍👍, ${err.stack} `);
 };
 
+if (process.env.SEED_DB) {
+  loadUsers();
+  loadMovies();
+}
 const app = express();
 
-const port = process.env.PORT ;
+const port = process.env.PORT;
 
-// if (process.env.NODE_ENV !== 'test') {  
-//   app.use(logger('dev'));
-// }
-//configure body-parser
+app.use(passport.initialize());
+
+app.use(session({
+  secret: 'ilikecake',
+  resave: true,
+  saveUninitialized: true
+}));
 app.use(bodyParser.json());
-
+app.use(bodyParser.urlencoded());
 app.use(express.static('public'));
-
-app.use('/api/movies', moviesRouter);
-
+app.use('/api/movies', passport.authenticate('jwt', {session: false}), moviesRouter);
 app.use('/api/users', usersRouter);
-
 app.use(errHandler);
 
-let server = app.listen(port, () => {
-  loglevel.info(`Server running at ${port}`);
+
+const server = app.listen(port, () => {
+  console.info(`Server running at ${port}`);
 });
 
-module.exports = server
+module.exports = server;
