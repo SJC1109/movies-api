@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const Schema = mongoose.Schema;
-
+ 
 const PeoplesSchema = new Schema({
     adult: { type: Boolean },
     also_known_as: [{ type: String }],
