@@ -1,9 +1,10 @@
 import dotenv, { load } from 'dotenv';
 import express from 'express';
 import moviesRouter from './api/movies';
+import now_PlayingRouter from './api/now_Playing';
 import bodyParser from 'body-parser';
 import './db';
-import {loadUsers, loadMovies} from './seedData';
+import {loadUsers, loadMovies,loadnow_Playing} from './seedData';
 import usersRouter from './api/users';
 import passport from './authenticate';
 import session from 'express-session';
@@ -22,6 +23,7 @@ const errHandler = (err, req, res, next) => {
 if (process.env.SEED_DB) {
   loadUsers();
   loadMovies();
+  loadnow_Playing();
 }
 const app = express();
 
@@ -39,6 +41,7 @@ app.use(bodyParser.urlencoded());
 app.use(express.static('public'));
 app.use('/api/movies', passport.authenticate('jwt', {session: false}), moviesRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/now_Playing', now_PlayingRouter);
 app.use(errHandler);
 
 
