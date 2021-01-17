@@ -43,13 +43,13 @@ describe("Users endpoint", () => {
       });
   });
 
-  after(async () => {
-    try {
-      await db.dropDatabase();
-    } catch (error) {
-      console.log(error);
-    }
-  });
+  // after(async () => {
+  //   try {
+  //     await db.dropDatabase();
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // });
   beforeEach(async () => {
     try {
       //api = require("../../../../index");
@@ -81,7 +81,19 @@ describe("Users endpoint", () => {
   });
 
   describe("POST / ", () => {
-
+    it("should return a 401 status with a right uername but a wrong password", () => {
+      request(api)
+        .post("/api/users?action=register")
+        .send({
+          username: "user1",
+          password: "test2",
+        })
+        .expect(200)
+        .end((err, res) => {
+          // console.log(res.body.msg);
+          expect(res.body.msg).to.equal(undefined);
+        });
+    });
     it("should return a 200 status and the confirmation message", () => {
       return request(api)
         .post("/api/users?action=register")
