@@ -36,3 +36,4 @@ now_PlayingSchema.statics.findByMovieDBId = function (id) {
 };
 
 export default mongoose.model('now_Playing', now_PlayingSchema);
+ 
